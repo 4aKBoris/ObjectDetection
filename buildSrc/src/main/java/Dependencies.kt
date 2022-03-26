@@ -72,4 +72,13 @@ object Dependencies {
         const val junit = "androidx.test.ext:junit:$versionJunit"
         const val espresso = "androidx.test.espresso:espresso-core:$versionEspresso"
     }
+
+    object Hilt {
+        private const val versionHilt = "2.40.5"
+        private const val versionHiltCompose = "1.0.0"
+
+        const val hilt = "com.google.dagger:hilt-android:$versionHilt"
+        const val hiltCompose = "androidx.hilt:hilt-navigation-compose:$versionHiltCompose"
+        const val hiltCompiler = "com.google.dagger:hilt-android-compiler:$versionHilt"
+    }
 }

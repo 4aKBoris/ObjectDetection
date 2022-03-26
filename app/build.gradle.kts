@@ -1,6 +1,8 @@
 plugins {
     id(Plugins.application)
     id(Plugins.kotlin)
+    id(Plugins.kapt)
+    id(Plugins.hilt)
 }
 
 apply(plugin = "kotlinx-serialization")
@@ -69,6 +71,10 @@ dependencies {
     implementation(Dependencies.Camera.camera)
     implementation(Dependencies.Camera.cameraLifecycle)
     implementation(Dependencies.Camera.cameraView)
+
+    implementation(Dependencies.Hilt.hilt)
+    implementation(Dependencies.Hilt.hiltCompose)
+    kapt(Dependencies.Hilt.hiltCompiler)
 
     implementation(Dependencies.Androidx.core)
     implementation(Dependencies.Androidx.lifecycle)

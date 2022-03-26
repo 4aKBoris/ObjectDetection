@@ -1,6 +1,7 @@
 buildscript {
     dependencies {
         classpath(Plugins.serialization)
+        classpath(Plugins.hiltAndroid)
     }
 }
 plugins {
