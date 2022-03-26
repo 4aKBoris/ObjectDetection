@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "TensorFlow"
-include ':app'
+include (":app")
