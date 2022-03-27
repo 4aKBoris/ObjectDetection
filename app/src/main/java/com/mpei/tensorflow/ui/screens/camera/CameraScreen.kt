@@ -14,13 +14,15 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import com.mpei.tensorflow.di.LocalImageCapture
 import com.mpei.tensorflow.navigation.BitmapData
-import com.mpei.tensorflow.ui.screens.camera.model.StateCamera
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.concurrent.Executor
@@ -45,7 +47,8 @@ private inline fun View.afterMeasured(crossinline block: () -> Unit) {
 @SuppressLint("ClickableViewAccessibility")
 @Composable
 fun CameraScreen(
-    state: StateCamera,
+    cameraSelector: Flow<CameraSelector>,
+    torch: Flow<Boolean>,
     previewView: PreviewView,
     preview: Preview,
     executor: Executor
@@ -53,8 +56,10 @@ fun CameraScreen(
     val imageCapture = LocalImageCapture.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    AndroidView(modifier = Modifier.fillMaxSize(), factory = {
+    AndroidView(modifier = Modifier
+        .fillMaxSize(), factory = {
         previewView
     })
 
@@ -67,18 +72,30 @@ fun CameraScreen(
         try {
             cameraProvider.unbindAll()
 
-            val camera = cameraProvider.bindToLifecycle(
+            var camera = cameraProvider.bindToLifecycle(
                 lifecycleOwner,
-                state.cameraSelector,
+                CameraSelector.DEFAULT_BACK_CAMERA,
                 preview,
                 imageCapture
             )
 
+            scope.launch {
+                cameraSelector.collectLatest {
+
+                    cameraProvider.unbindAll()
+
+                    camera = cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        it,
+                        preview,
+                        imageCapture
+                    )
+                }
+            }
+
             val cameraControl = camera.cameraControl
 
             val cameraInfo = camera.cameraInfo
-
-            if (state is StateCamera.BackCamera) cameraControl.enableTorch(state.torch)
 
             previewView.afterMeasured {
                 previewView.setOnTouchListener { _, event ->
@@ -106,11 +123,17 @@ fun CameraScreen(
                 }
             }
 
+            scope.launch {
+                torch.collectLatest {
+                    cameraControl.enableTorch(it)
+                }
+            }
+
             val listener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
                 override fun onScale(detector: ScaleGestureDetector): Boolean {
-                    val currentZoomRatio = cameraInfo.zoomState.value?.zoomRatio ?: 0F
+                    val zoom = cameraInfo.zoomState.value?.zoomRatio ?: 1f
                     val delta = detector.scaleFactor
-                    cameraControl.setZoomRatio(currentZoomRatio * delta)
+                    cameraControl.setZoomRatio(zoom * delta)
                     return true
                 }
             }

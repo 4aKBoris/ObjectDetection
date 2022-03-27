@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +23,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.mpei.tensorflow.ui.screens.camera.CameraScreen
 import com.mpei.tensorflow.ui.screens.camera.model.CameraViewModel
+import com.mpei.tensorflow.ui.screens.camera.model.StateCamera
 import com.mpei.tensorflow.ui.screens.enter.EnterScreen
 import com.mpei.tensorflow.ui.screens.model.ModelScreen
 import com.mpei.tensorflow.ui.screens.result.ResultScreen
@@ -80,9 +82,21 @@ private fun NavGraphBuilder.photoScreens(
 
             val state by cameraViewModel.state.collectAsState()
 
-            CameraScreen(state = state, executor = executor, previewView = previewView, preview = preview)
+            val torch =
+                snapshotFlow { if (state is StateCamera.BackCamera) (state as StateCamera.BackCamera).torch else false }
+
+            val cameraSelector = snapshotFlow { state.cameraSelector }
+
+            CameraScreen(
+                torch = torch,
+                executor = executor,
+                previewView = previewView,
+                preview = preview,
+                cameraSelector = cameraSelector
+            )
         }
-        composable(route = "${PhotoScreen.Result.name}/{$uriKey}",
+        composable(
+            route = "${PhotoScreen.Result.name}/{$uriKey}",
             arguments = listOf(
                 navArgument(uriKey) {
                     type = NavType.StringType
