@@ -45,7 +45,7 @@ fun FloatingButton(
     screen: PhotoScreen,
     executor: Executor,
     outputOptions: OutputFileOptions,
-    navigate: (String, PhotoScreen) -> Unit
+    navigate: (String, PhotoScreen, Boolean) -> Unit
 ) {
 
     val viewModel = hiltViewModel<CameraViewModel>()
@@ -191,7 +191,7 @@ private fun ButtonCenter(
     screen: PhotoScreen,
     executor: Executor,
     outputOptions: OutputFileOptions,
-    navigate: (String, PhotoScreen) -> Unit
+    navigate: (String, PhotoScreen, Boolean) -> Unit
 ) {
 
     val size by animateDpAsState(
@@ -215,7 +215,7 @@ private fun ButtonCenter(
             size = size
         ) {
             when (screen) {
-                PhotoScreen.Enter -> navigate(PhotoScreen.Camera.name, PhotoScreen.Camera)
+                PhotoScreen.Enter -> navigate(PhotoScreen.Camera.name, PhotoScreen.Camera, false)
                 PhotoScreen.Camera -> {
                     scope.launch(Dispatchers.Default) {
                         takePhoto(imageCapture = imageCapture,
@@ -223,18 +223,18 @@ private fun ButtonCenter(
                             outputOptions = outputOptions,
                             onSuccess = {
                                 scope.launch(Dispatchers.Main) {
-                                    navigate("${PhotoScreen.Result.name}/$it", PhotoScreen.Result)
+                                    navigate("${PhotoScreen.Result.name}/$it", PhotoScreen.Result, false)
                                 }
                             },
                             onError = {
                                 scope.launch(Dispatchers.Main) {
-                                    navigate(PhotoScreen.Enter.name, PhotoScreen.Enter)
+                                    navigate(PhotoScreen.Enter.name, PhotoScreen.Enter, true)
                                 }
                             })
 
                     }
                 }
-                PhotoScreen.Result -> navigate(PhotoScreen.Enter.name, PhotoScreen.Enter)
+                PhotoScreen.Result -> navigate(PhotoScreen.Enter.name, PhotoScreen.Enter, true)
             }
         }
     }

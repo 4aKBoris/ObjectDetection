@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.os.Build
 import android.util.Log
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.annotation.RequiresApi
@@ -73,7 +74,11 @@ fun CameraScreen(
                 imageCapture
             )
 
-            if (state is StateCamera.BackCamera) camera.cameraControl.enableTorch(state.torch)
+            val cameraControl = camera.cameraControl
+
+            val cameraInfo = camera.cameraInfo
+
+            if (state is StateCamera.BackCamera) cameraControl.enableTorch(state.torch)
 
             previewView.afterMeasured {
                 previewView.setOnTouchListener { _, event ->
@@ -86,7 +91,7 @@ fun CameraScreen(
                                 previewView.width.toFloat(), previewView.height.toFloat()
                             )
                             val autoFocusPoint = factory.createPoint(event.x, event.y)
-                            camera.cameraControl.startFocusAndMetering(
+                            cameraControl.startFocusAndMetering(
                                 FocusMeteringAction.Builder(
                                     autoFocusPoint,
                                     FocusMeteringAction.FLAG_AF
@@ -99,6 +104,22 @@ fun CameraScreen(
                         else -> false
                     }
                 }
+            }
+
+            val listener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    val currentZoomRatio = cameraInfo.zoomState.value?.zoomRatio ?: 0F
+                    val delta = detector.scaleFactor
+                    cameraControl.setZoomRatio(currentZoomRatio * delta)
+                    return true
+                }
+            }
+
+            val scaleGestureDetector = ScaleGestureDetector(context, listener)
+
+            previewView.setOnTouchListener { _, event ->
+                scaleGestureDetector.onTouchEvent(event)
+                return@setOnTouchListener true
             }
         } catch (exc: Exception) {
             Log.e(ContentValues.TAG, "Use case binding failed", exc)

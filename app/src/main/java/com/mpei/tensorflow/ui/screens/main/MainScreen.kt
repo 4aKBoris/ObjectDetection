@@ -15,8 +15,12 @@ import androidx.compose.animation.core.spring
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -55,9 +59,23 @@ fun MainView(
 
     val navController = rememberNavController()
 
-    var tabPage by rememberSaveable { mutableStateOf(Screen.Photo) }
+    val backstackEntry by navController.currentBackStackEntryAsState()
+
+    val (tabPage, setTabPage) = rememberSaveable { mutableStateOf(Screen.Photo) }
+
+    setTabPage(
+        Screen.fromRoute(
+            backstackEntry?.destination?.route
+        )
+    )
 
     val (screen, setScreen) = rememberSaveable { mutableStateOf(PhotoScreen.Enter) }
+
+    setScreen(
+        PhotoScreen.fromRoute(
+            backstackEntry?.destination?.route
+        )
+    )
 
     val backgroundColor by animateColorAsState(
         targetValue = if (tabPage == Screen.Model) Green80 else Purple80,
@@ -74,7 +92,8 @@ fun MainView(
                 screen = screen,
                 executor = executor,
                 outputOptions = outputOptions
-            ) { route, photoScreen ->
+            ) { route, photoScreen, flag ->
+                if (flag) navController.backQueue.clear()
                 navController.navigate(route)
                 setScreen(photoScreen)
             }
@@ -85,9 +104,10 @@ fun MainView(
                 tabPage = tabPage,
                 backgroundColor = backgroundColor
             ) { tab ->
+                if (tab == Screen.Model)
+                    while (navController.backQueue.size > 1)
+                        navController.backQueue.removeLast()
                 navController.navigate(tab.name)
-                tabPage = tab
-                if (tab == Screen.Model) setScreen(PhotoScreen.Enter)
             }
         }
     ) {
