@@ -3,6 +3,8 @@ package com.mpei.tensorflow.navigation
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.camera.core.Preview
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import com.mpei.tensorflow.ui.screens.model.ModelScreen
 import com.mpei.tensorflow.ui.screens.result.ResultScreen
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.util.concurrent.Executor
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
@@ -34,7 +37,10 @@ fun Navigation(
     backgroundColor: Color,
     model: String,
     setModel: (String) -> Unit,
-    cameraViewModel: CameraViewModel = hiltViewModel()
+    cameraViewModel: CameraViewModel = hiltViewModel(),
+    preview: Preview,
+    previewView: PreviewView,
+    executor: Executor
 ) {
     NavHost(
         navController = navController,
@@ -44,7 +50,10 @@ fun Navigation(
         photoScreens(
             model = model,
             backgroundColor = backgroundColor,
-            cameraViewModel = cameraViewModel
+            cameraViewModel = cameraViewModel,
+            executor = executor,
+            preview = preview,
+            previewView = previewView
         )
         composable(Screen.Model.name) {
             ModelScreen(model = model, setModel = setModel, backgroundColor = backgroundColor)
@@ -57,7 +66,10 @@ fun Navigation(
 private fun NavGraphBuilder.photoScreens(
     model: String,
     backgroundColor: Color,
-    cameraViewModel: CameraViewModel
+    cameraViewModel: CameraViewModel,
+    preview: Preview,
+    previewView: PreviewView,
+    executor: Executor
 ) {
 
     navigation(startDestination = PhotoScreen.Enter.name, route = Screen.Photo.name) {
@@ -68,7 +80,7 @@ private fun NavGraphBuilder.photoScreens(
 
             val state by cameraViewModel.state.collectAsState()
 
-            CameraScreen(state = state)
+            CameraScreen(state = state, executor = executor, previewView = previewView, preview = preview)
         }
         composable(route = "${PhotoScreen.Result.name}/{$uriKey}",
             arguments = listOf(

@@ -2,6 +2,7 @@
 
 package com.mpei.tensorflow.ui.floatingbutton
 
+import androidx.camera.core.ImageCapture.OutputFileOptions
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -23,11 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.mpei.tensorflow.LocalImageCapture
+import com.mpei.tensorflow.di.LocalImageCapture
 import com.mpei.tensorflow.navigation.PhotoScreen
 import com.mpei.tensorflow.navigation.Screen
 import com.mpei.tensorflow.ui.screens.camera.model.CameraViewModel
@@ -36,12 +36,15 @@ import com.mpei.tensorflow.ui.screens.camera.model.StateCamera
 import com.mpei.tensorflow.ui.screens.camera.takePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executor
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun FloatingButton(
     tabPage: Screen,
     screen: PhotoScreen,
+    executor: Executor,
+    outputOptions: OutputFileOptions,
     navigate: (String, PhotoScreen) -> Unit
 ) {
 
@@ -118,7 +121,9 @@ fun FloatingButton(
                     .align(Alignment.Center)
                     .padding(vertical = padding),
                 screen = screen,
-                navigate = navigate
+                navigate = navigate,
+                executor = executor,
+                outputOptions = outputOptions
             )
 
         }
@@ -184,6 +189,8 @@ private fun ButtonTorch(
 private fun ButtonCenter(
     modifier: Modifier,
     screen: PhotoScreen,
+    executor: Executor,
+    outputOptions: OutputFileOptions,
     navigate: (String, PhotoScreen) -> Unit
 ) {
 
@@ -193,8 +200,6 @@ private fun ButtonCenter(
     )
 
     val scope = rememberCoroutineScope()
-
-    val context = LocalContext.current
 
     val imageCapture = LocalImageCapture.current
 
@@ -213,7 +218,9 @@ private fun ButtonCenter(
                 PhotoScreen.Enter -> navigate(PhotoScreen.Camera.name, PhotoScreen.Camera)
                 PhotoScreen.Camera -> {
                     scope.launch(Dispatchers.Default) {
-                        takePhoto(context = context, imageCapture = imageCapture,
+                        takePhoto(imageCapture = imageCapture,
+                            executor = executor,
+                            outputOptions = outputOptions,
                             onSuccess = {
                                 scope.launch(Dispatchers.Main) {
                                     navigate("${PhotoScreen.Result.name}/$it", PhotoScreen.Result)

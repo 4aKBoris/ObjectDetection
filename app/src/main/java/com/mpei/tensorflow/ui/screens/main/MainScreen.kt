@@ -6,6 +6,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.camera.core.ImageCapture.OutputFileOptions
+import androidx.camera.core.Preview
+import androidx.camera.view.PreviewView
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -24,12 +27,20 @@ import com.mpei.tensorflow.ui.bottombar.BottomBar
 import com.mpei.tensorflow.ui.floatingbutton.FloatingButton
 import com.mpei.tensorflow.ui.theme.Green80
 import com.mpei.tensorflow.ui.theme.Purple80
+import java.util.concurrent.Executor
 
 @RequiresApi(Build.VERSION_CODES.P)
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun MainView(model: String, setModel: (String) -> Unit) {
+fun MainView(
+    model: String,
+    setModel: (String) -> Unit,
+    preview: Preview,
+    previewView: PreviewView,
+    executor: Executor,
+    outputOptions: OutputFileOptions
+) {
 
     val cameraPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -60,7 +71,9 @@ fun MainView(model: String, setModel: (String) -> Unit) {
         floatingActionButton = {
             FloatingButton(
                 tabPage = tabPage,
-                screen = screen
+                screen = screen,
+                executor = executor,
+                outputOptions = outputOptions
             ) { route, photoScreen ->
                 navController.navigate(route)
                 setScreen(photoScreen)
@@ -83,7 +96,10 @@ fun MainView(model: String, setModel: (String) -> Unit) {
             innerPadding = it,
             model = model,
             setModel = setModel,
-            backgroundColor = backgroundColor
+            backgroundColor = backgroundColor,
+            executor = executor,
+            preview = preview,
+            previewView = previewView
         )
 
     }
