@@ -2,11 +2,14 @@
 
 package com.mpei.tensorflow.ui.screens.model
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
@@ -20,9 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,13 +36,13 @@ import com.mpei.tensorflow.ui.theme.PurpleGrey80
 import com.mpei.tensorflow.ui.theme.Teal70
 
 private val modelsInfo = arrayListOf(
-    arrayListOf("Помидор", "Салат"),
-    arrayListOf("Помидор", "Салат"),
-    arrayListOf("Помидор", "Салат"),
-    arrayListOf("Помидор", "Салат"),
-    arrayListOf("Помидор", "Салат"),
-    arrayListOf("Помидор", "Салат"),
-    arrayListOf("Помидор", "Салат")
+    "Модель обнаружения объектов, обученная на наборе данных COCO." to "https://tfhub.dev/tensorflow/lite-model/ssd_mobilenet_v1/1/metadata/2",
+    "Модель обнаружения объектов EfficientDet-Lite3 (магистраль EfficientNet-Lite3 с экстрактором функций BiFPN, общим предиктором коробки и фокальными потерями), обученная на наборе данных COCO 2017, оптимизирована для TFLite, предназначена для работы на мобильных процессорах, GPU и EdgeTPU." to "https://tfhub.dev/tensorflow/lite-model/efficientdet/lite3/detection/metadata/1",
+    "Детектор мобильных объектов, не зависящий от класса." to "https://tfhub.dev/google/lite-model/object_detection/mobile_object_localizer_v1/1/metadata/2",
+    "Модель обнаружения объектов EfficientDet-Lite2 (магистраль EfficientNet-Lite2 с экстрактором функций BiFPN, общим предиктором коробки и фокальными потерями), обученная на наборе данных COCO 2017, оптимизирована для TFLite, предназначена для работы на мобильных процессорах, GPU и EdgeTPU." to "https://tfhub.dev/tensorflow/lite-model/efficientdet/lite2/detection/metadata/1",
+    "Модель обнаружения объектов EfficientDet-Lite4 (магистраль EfficientNet-Lite4 с экстрактором функций BiFPN, общим предиктором коробки и фокальными потерями), обученная на наборе данных COCO 2017, оптимизирована для TFLite, предназначена для работы на мобильных процессорах CPU, GPU и EdgeTPU." to "https://tfhub.dev/tensorflow/lite-model/efficientdet/lite4/detection/metadata/2",
+    "Модель обнаружения объектов EfficientDet-Lite1 (магистраль EfficientNet-Lite1 с экстрактором функций BiFPN, общим предиктором коробки и фокальными потерями), обученная на наборе данных COCO 2017, оптимизирована для TFLite, предназначена для работы на мобильных процессорах CPU, GPU и EdgeTPU." to "https://tfhub.dev/tensorflow/lite-model/efficientdet/lite1/detection/metadata/1",
+    "Модель обнаружения объектов EfficientDet-Lite0 (магистраль EfficientNet-Lite0 с экстрактором функций BiFPN, общим предиктором коробки и фокальными потерями), обученная на наборе данных COCO 2017, оптимизирована для TFLite, предназначена для работы на мобильных процессорах, GPU и EdgeTPU." to "https://tfhub.dev/tensorflow/lite-model/efficientdet/lite0/detection/metadata/1"
 )
 
 @Composable
@@ -68,7 +73,7 @@ private fun Item(index: Int, model: String, setModel: (String) -> Unit) {
             .padding(all = 8.dp)
             .animateContentSize(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioHighBouncy,
+                    dampingRatio = Spring.DampingRatioLowBouncy,
                     stiffness = Spring.StiffnessVeryLow,
                     visibilityThreshold = IntSize.VisibilityThreshold
                 )
@@ -110,7 +115,7 @@ private fun InfoItem(index: Int) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(
             modifier = Modifier
@@ -118,34 +123,34 @@ private fun InfoItem(index: Int) {
                 .background(PurpleGrey40)
                 .height(1.dp)
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            MainText(text = "Распознавание:")
-            Column(
-                modifier = Modifier.padding(start = 16.dp),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.Start
-            ) {
-                for (text in modelsInfo[index]) {
-                    Text(text = text, fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic, fontSize = 16.sp)
-                }
-            }
-        }
+        MainText(text = "Описание", modifier = Modifier.padding(vertical = 8.dp))
+        Text(text = modelsInfo[index].first)
+        DescriptionModel(uriString = modelsInfo[index].second)
     }
 }
 
 @Composable
-private fun MainText(text: String) {
+fun DescriptionModel(uriString: String) {
+    val context = LocalContext.current
+    val intent = remember { Intent(Intent.ACTION_VIEW, Uri.parse(uriString)) }
+
+    MainText(
+        text = "Подробное описание",
+        textDecoration = TextDecoration.Underline,
+        modifier = Modifier
+            .padding(vertical = 16.dp)
+            .clickable { context.startActivity(intent) })
+}
+
+@Composable
+private fun MainText(text: String, modifier: Modifier = Modifier, textDecoration: TextDecoration = TextDecoration.None) {
     Text(
         text = text,
         fontStyle = FontStyle.Italic,
         fontFamily = FontFamily.Serif,
         fontSize = 20.sp,
-        fontWeight = FontWeight.Medium
+        fontWeight = FontWeight.Medium,
+        modifier = modifier,
+        textDecoration = textDecoration
     )
 }
