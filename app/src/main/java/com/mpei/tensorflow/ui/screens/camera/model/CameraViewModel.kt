@@ -1,10 +1,13 @@
 package com.mpei.tensorflow.ui.screens.camera.model
 
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
-class CameraViewModel: ViewModel(), IntentHandler<IntentCamera> {
+@HiltViewModel
+class CameraViewModel @Inject constructor(): ViewModel(), IntentHandler<IntentCamera> {
 
     private val _state: MutableStateFlow<StateCamera> = MutableStateFlow(StateCamera.BackCamera(torch = false))
 

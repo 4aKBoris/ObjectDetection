@@ -2,7 +2,7 @@
 
 package com.mpei.tensorflow.ui.floatingbutton
 
-import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCapture.OutputFileOptions
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -16,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -23,27 +24,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.mpei.tensorflow.di.LocalImageCapture
 import com.mpei.tensorflow.navigation.PhotoScreen
 import com.mpei.tensorflow.navigation.Screen
+import com.mpei.tensorflow.ui.screens.camera.model.CameraViewModel
 import com.mpei.tensorflow.ui.screens.camera.model.IntentCamera
 import com.mpei.tensorflow.ui.screens.camera.model.StateCamera
 import com.mpei.tensorflow.ui.screens.camera.takePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executor
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun FloatingButton(
     tabPage: Screen,
     screen: PhotoScreen,
-    state: StateCamera,
-    setState: (IntentCamera) -> Unit,
-    imageCapture: ImageCapture,
+    executor: Executor,
+    outputOptions: OutputFileOptions,
     navigate: (String, PhotoScreen) -> Unit
 ) {
+
+    val viewModel = hiltViewModel<CameraViewModel>()
+
+    val state by viewModel.state.collectAsState()
 
     val length by animateDpAsState(
         targetValue = if (screen == PhotoScreen.Camera) 128.dp else 0.dp,
@@ -96,7 +103,7 @@ fun FloatingButton(
                 width = width,
                 visible = screen == PhotoScreen.Camera,
                 state = state,
-                setState = setState
+                setState = viewModel::obtainIntent
             )
 
             ButtonTorch(
@@ -106,7 +113,7 @@ fun FloatingButton(
                 width = width,
                 visible = screen == PhotoScreen.Camera,
                 state = state,
-                setState = setState
+                setState = viewModel::obtainIntent
             )
 
             ButtonCenter(
@@ -114,8 +121,9 @@ fun FloatingButton(
                     .align(Alignment.Center)
                     .padding(vertical = padding),
                 screen = screen,
-                imageCapture = imageCapture,
-                navigate = navigate
+                navigate = navigate,
+                executor = executor,
+                outputOptions = outputOptions
             )
 
         }
@@ -181,7 +189,8 @@ private fun ButtonTorch(
 private fun ButtonCenter(
     modifier: Modifier,
     screen: PhotoScreen,
-    imageCapture: ImageCapture,
+    executor: Executor,
+    outputOptions: OutputFileOptions,
     navigate: (String, PhotoScreen) -> Unit
 ) {
 
@@ -192,7 +201,7 @@ private fun ButtonCenter(
 
     val scope = rememberCoroutineScope()
 
-    val context = LocalContext.current
+    val imageCapture = LocalImageCapture.current
 
     Crossfade(
         targetState = screen.icon,
@@ -209,7 +218,9 @@ private fun ButtonCenter(
                 PhotoScreen.Enter -> navigate(PhotoScreen.Camera.name, PhotoScreen.Camera)
                 PhotoScreen.Camera -> {
                     scope.launch(Dispatchers.Default) {
-                        takePhoto(context = context, imageCapture = imageCapture,
+                        takePhoto(imageCapture = imageCapture,
+                            executor = executor,
+                            outputOptions = outputOptions,
                             onSuccess = {
                                 scope.launch(Dispatchers.Main) {
                                     navigate("${PhotoScreen.Result.name}/$it", PhotoScreen.Result)
