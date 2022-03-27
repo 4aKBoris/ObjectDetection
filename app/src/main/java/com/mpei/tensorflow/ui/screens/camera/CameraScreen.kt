@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.mpei.tensorflow.LocalImageCapture
 import com.mpei.tensorflow.navigation.BitmapData
 import com.mpei.tensorflow.ui.screens.camera.model.StateCamera
 import kotlinx.serialization.encodeToString
@@ -68,9 +69,9 @@ private fun PreviewView.getPreviewUseCase(): Preview {
 @Composable
 fun CameraScreen(
     scaleType: PreviewView.ScaleType = PreviewView.ScaleType.FILL_CENTER,
-    state: StateCamera,
-    imageCapture: ImageCapture
+    state: StateCamera
 ) {
+    val imageCapture = LocalImageCapture.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 

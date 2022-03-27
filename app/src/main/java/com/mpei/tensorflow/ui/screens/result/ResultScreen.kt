@@ -29,7 +29,7 @@ import org.tensorflow.lite.task.vision.detector.ObjectDetector
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
-fun ResultScreen(uri: Uri?, model: String) {
+fun ResultScreen(model: String, uri: Uri?) {
 
     val context = LocalContext.current
 

@@ -3,7 +3,6 @@ package com.mpei.tensorflow.navigation
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.camera.core.ImageCapture
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -11,7 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -33,10 +32,9 @@ fun Navigation(
     navController: NavHostController,
     innerPadding: PaddingValues,
     backgroundColor: Color,
-    imageCapture: ImageCapture,
     model: String,
     setModel: (String) -> Unit,
-    cameraViewModel: CameraViewModel = viewModel()
+    cameraViewModel: CameraViewModel = hiltViewModel()
 ) {
     NavHost(
         navController = navController,
@@ -44,10 +42,9 @@ fun Navigation(
         modifier = Modifier.padding(paddingValues = innerPadding),
     ) {
         photoScreens(
+            model = model,
             backgroundColor = backgroundColor,
-            imageCapture = imageCapture,
-            cameraViewModel = cameraViewModel,
-            model = model
+            cameraViewModel = cameraViewModel
         )
         composable(Screen.Model.name) {
             ModelScreen(model = model, setModel = setModel, backgroundColor = backgroundColor)
@@ -58,11 +55,11 @@ fun Navigation(
 
 @RequiresApi(Build.VERSION_CODES.P)
 private fun NavGraphBuilder.photoScreens(
+    model: String,
     backgroundColor: Color,
-    imageCapture: ImageCapture,
-    cameraViewModel: CameraViewModel,
-    model: String
+    cameraViewModel: CameraViewModel
 ) {
+
     navigation(startDestination = PhotoScreen.Enter.name, route = Screen.Photo.name) {
         composable(PhotoScreen.Enter.name) {
             EnterScreen(backgroundColor = backgroundColor)
@@ -71,8 +68,7 @@ private fun NavGraphBuilder.photoScreens(
 
             val state by cameraViewModel.state.collectAsState()
 
-            CameraScreen(imageCapture = imageCapture, state = state)
-
+            CameraScreen(state = state)
         }
         composable(route = "${PhotoScreen.Result.name}/{$uriKey}",
             arguments = listOf(
