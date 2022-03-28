@@ -9,8 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.Preview
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,7 +29,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executor
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -42,18 +39,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var imageCapture: ImageCapture
-
-    @Inject
-    lateinit var previewView: PreviewView
-
-    @Inject
-    lateinit var preview: Preview
-
-    @Inject
-    lateinit var outputOptions: ImageCapture.OutputFileOptions
-
-    @Inject
-    lateinit var executor: Executor
 
     @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,11 +77,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         MainView(
                             model = model,
-                            setModel = ::setModel,
-                            preview = preview,
-                            previewView = previewView,
-                            executor = executor,
-                            outputOptions = outputOptions
+                            setModel = ::setModel
                         )
                     }
                 }

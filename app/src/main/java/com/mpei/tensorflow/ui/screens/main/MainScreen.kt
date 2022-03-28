@@ -6,9 +6,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.camera.core.ImageCapture.OutputFileOptions
-import androidx.camera.core.Preview
-import androidx.camera.view.PreviewView
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -31,7 +28,6 @@ import com.mpei.tensorflow.ui.bottombar.BottomBar
 import com.mpei.tensorflow.ui.floatingbutton.FloatingButton
 import com.mpei.tensorflow.ui.theme.Green80
 import com.mpei.tensorflow.ui.theme.Purple80
-import java.util.concurrent.Executor
 
 @RequiresApi(Build.VERSION_CODES.P)
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -39,11 +35,7 @@ import java.util.concurrent.Executor
 @Composable
 fun MainView(
     model: String,
-    setModel: (String) -> Unit,
-    preview: Preview,
-    previewView: PreviewView,
-    executor: Executor,
-    outputOptions: OutputFileOptions
+    setModel: (String) -> Unit
 ) {
 
     val cameraPermissionState = rememberMultiplePermissionsState(
@@ -89,9 +81,7 @@ fun MainView(
         floatingActionButton = {
             FloatingButton(
                 tabPage = tabPage,
-                screen = screen,
-                executor = executor,
-                outputOptions = outputOptions
+                screen = screen
             ) { route, photoScreen, flag ->
                 if (flag) navController.backQueue.clear()
                 navController.navigate(route)
@@ -116,10 +106,7 @@ fun MainView(
             innerPadding = it,
             model = model,
             setModel = setModel,
-            backgroundColor = backgroundColor,
-            executor = executor,
-            preview = preview,
-            previewView = previewView
+            backgroundColor = backgroundColor
         )
 
     }

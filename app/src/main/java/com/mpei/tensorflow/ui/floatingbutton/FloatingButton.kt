@@ -2,7 +2,6 @@
 
 package com.mpei.tensorflow.ui.floatingbutton
 
-import androidx.camera.core.ImageCapture.OutputFileOptions
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -36,19 +35,15 @@ import com.mpei.tensorflow.ui.screens.camera.model.StateCamera
 import com.mpei.tensorflow.ui.screens.camera.takePhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executor
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun FloatingButton(
     tabPage: Screen,
     screen: PhotoScreen,
-    executor: Executor,
-    outputOptions: OutputFileOptions,
+    viewModel: CameraViewModel = hiltViewModel(),
     navigate: (String, PhotoScreen, Boolean) -> Unit
 ) {
-
-    val viewModel = hiltViewModel<CameraViewModel>()
 
     val state by viewModel.state.collectAsState()
 
@@ -121,9 +116,7 @@ fun FloatingButton(
                     .align(Alignment.Center)
                     .padding(vertical = padding),
                 screen = screen,
-                navigate = navigate,
-                executor = executor,
-                outputOptions = outputOptions
+                navigate = navigate
             )
 
         }
@@ -189,8 +182,7 @@ private fun ButtonTorch(
 private fun ButtonCenter(
     modifier: Modifier,
     screen: PhotoScreen,
-    executor: Executor,
-    outputOptions: OutputFileOptions,
+    viewModel: CameraViewModel = hiltViewModel(),
     navigate: (String, PhotoScreen, Boolean) -> Unit
 ) {
 
@@ -219,8 +211,8 @@ private fun ButtonCenter(
                 PhotoScreen.Camera -> {
                     scope.launch(Dispatchers.Default) {
                         takePhoto(imageCapture = imageCapture,
-                            executor = executor,
-                            outputOptions = outputOptions,
+                            executor = viewModel.executor,
+                            outputOptions = viewModel.outputOptions,
                             onSuccess = {
                                 scope.launch(Dispatchers.Main) {
                                     navigate("${PhotoScreen.Result.name}/$it", PhotoScreen.Result, false)

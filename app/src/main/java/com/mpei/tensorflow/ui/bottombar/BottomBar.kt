@@ -34,7 +34,6 @@ fun BottomBar(
     backgroundColor: Color,
     onTabSelected: (screen: Screen) -> Unit
 ) {
-    println(tabPage.name)
     TabRow(
         selectedTabIndex = tabPage.ordinal,
         indicator = { tabPositions ->
