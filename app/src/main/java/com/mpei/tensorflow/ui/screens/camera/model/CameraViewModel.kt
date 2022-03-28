@@ -1,13 +1,38 @@
 package com.mpei.tensorflow.ui.screens.camera.model
 
+import android.annotation.SuppressLint
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.Preview
+import androidx.camera.view.PreviewView
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.util.concurrent.Executor
 import javax.inject.Inject
+import javax.inject.Singleton
 
 @HiltViewModel
 class CameraViewModel @Inject constructor(): ViewModel(), IntentHandler<IntentCamera> {
+
+    @Inject
+    @Singleton
+    lateinit var imageCapture: ImageCapture
+
+    @SuppressLint("StaticFieldLeak")
+    @Inject
+    @Singleton
+    lateinit var previewView: PreviewView
+
+    @Inject
+    @Singleton
+    lateinit var preview: Preview
+
+    @Inject
+    lateinit var outputOptions: ImageCapture.OutputFileOptions
+
+    @Inject
+    lateinit var executor: Executor
 
     private val _state: MutableStateFlow<StateCamera> = MutableStateFlow(StateCamera.BackCamera(torch = false))
 

@@ -6,17 +6,18 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.camera.core.ImageCapture.OutputFileOptions
-import androidx.camera.core.Preview
-import androidx.camera.view.PreviewView
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -27,7 +28,6 @@ import com.mpei.tensorflow.ui.bottombar.BottomBar
 import com.mpei.tensorflow.ui.floatingbutton.FloatingButton
 import com.mpei.tensorflow.ui.theme.Green80
 import com.mpei.tensorflow.ui.theme.Purple80
-import java.util.concurrent.Executor
 
 @RequiresApi(Build.VERSION_CODES.P)
 @SuppressLint("CoroutineCreationDuringComposition")
@@ -35,11 +35,7 @@ import java.util.concurrent.Executor
 @Composable
 fun MainView(
     model: String,
-    setModel: (String) -> Unit,
-    preview: Preview,
-    previewView: PreviewView,
-    executor: Executor,
-    outputOptions: OutputFileOptions
+    setModel: (String) -> Unit
 ) {
 
     val cameraPermissionState = rememberMultiplePermissionsState(
@@ -55,9 +51,23 @@ fun MainView(
 
     val navController = rememberNavController()
 
-    var tabPage by rememberSaveable { mutableStateOf(Screen.Photo) }
+    val backstackEntry by navController.currentBackStackEntryAsState()
+
+    val (tabPage, setTabPage) = rememberSaveable { mutableStateOf(Screen.Photo) }
+
+    setTabPage(
+        Screen.fromRoute(
+            backstackEntry?.destination?.route
+        )
+    )
 
     val (screen, setScreen) = rememberSaveable { mutableStateOf(PhotoScreen.Enter) }
+
+    setScreen(
+        PhotoScreen.fromRoute(
+            backstackEntry?.destination?.route
+        )
+    )
 
     val backgroundColor by animateColorAsState(
         targetValue = if (tabPage == Screen.Model) Green80 else Purple80,
@@ -71,10 +81,9 @@ fun MainView(
         floatingActionButton = {
             FloatingButton(
                 tabPage = tabPage,
-                screen = screen,
-                executor = executor,
-                outputOptions = outputOptions
-            ) { route, photoScreen ->
+                screen = screen
+            ) { route, photoScreen, flag ->
+                if (flag) navController.backQueue.clear()
                 navController.navigate(route)
                 setScreen(photoScreen)
             }
@@ -85,9 +94,10 @@ fun MainView(
                 tabPage = tabPage,
                 backgroundColor = backgroundColor
             ) { tab ->
+                if (tab == Screen.Model)
+                    while (navController.backQueue.size > 1)
+                        navController.backQueue.removeLast()
                 navController.navigate(tab.name)
-                tabPage = tab
-                if (tab == Screen.Model) setScreen(PhotoScreen.Enter)
             }
         }
     ) {
@@ -96,10 +106,7 @@ fun MainView(
             innerPadding = it,
             model = model,
             setModel = setModel,
-            backgroundColor = backgroundColor,
-            executor = executor,
-            preview = preview,
-            previewView = previewView
+            backgroundColor = backgroundColor
         )
 
     }
